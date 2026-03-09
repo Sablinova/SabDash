@@ -24,13 +24,40 @@
     <div class="commands-grid" id="commandsGrid">
         {% for cog_name, cog_data in commands.items() %}
         <div class="cog-section" data-cog="{{ cog_name }}">
-            <h2 class="cog-title">{{ cog_name }}</h2>
-            {% if cog_data is mapping %}
-                {% for cmd_name, cmd_data in cog_data.items() %}
-                <div class="command-item" data-name="{{ cmd_name }}">
-                    <code class="cmd-name">{{ cmd_name }}</code>
-                    {% if cmd_data is mapping and cmd_data.get('description') %}
-                    <span class="cmd-desc">{{ cmd_data['description'] }}</span>
+            <div class="cog-header">
+                <h2 class="cog-title">{{ cog_data.get('name', cog_name) if cog_data is mapping else cog_name }}</h2>
+                {% if cog_data is mapping and cog_data.get('description') %}
+                <p class="cog-desc">{{ cog_data['description'] }}</p>
+                {% endif %}
+            </div>
+            {% if cog_data is mapping and cog_data.get('commands') is iterable %}
+                {% for cmd in cog_data['commands'] %}
+                <div class="command-item" data-name="{{ cmd.get('name', '') if cmd is mapping else cmd }}">
+                    <div class="cmd-main">
+                        <code class="cmd-name">{{ cmd.get('name', '') if cmd is mapping else cmd }}</code>
+                        {% if cmd is mapping and cmd.get('signature') %}
+                        <span class="cmd-sig">{{ cmd['signature'] }}</span>
+                        {% endif %}
+                    </div>
+                    {% if cmd is mapping and cmd.get('short_description') %}
+                    <span class="cmd-desc">{{ cmd['short_description'] }}</span>
+                    {% endif %}
+                    {% if cmd is mapping and cmd.get('subs') %}
+                    <div class="cmd-subs">
+                        {% for sub in cmd['subs'] %}
+                        <div class="command-item sub-command" data-name="{{ sub.get('name', '') }}">
+                            <div class="cmd-main">
+                                <code class="cmd-name">{{ sub.get('name', '') }}</code>
+                                {% if sub.get('signature') %}
+                                <span class="cmd-sig">{{ sub['signature'] }}</span>
+                                {% endif %}
+                            </div>
+                            {% if sub.get('short_description') %}
+                            <span class="cmd-desc">{{ sub['short_description'] }}</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
                     {% endif %}
                 </div>
                 {% endfor %}
@@ -45,17 +72,20 @@
 {% block scripts %}
 <script>
 (function() {
-    const search = document.getElementById('commandSearch');
+    var search = document.getElementById('commandSearch');
     if (!search) return;
     search.addEventListener('input', function() {
-        const q = this.value.toLowerCase();
+        var q = this.value.toLowerCase();
         document.querySelectorAll('.command-item').forEach(function(el) {
-            const name = el.getAttribute('data-name') || '';
-            el.style.display = name.toLowerCase().includes(q) ? '' : 'none';
+            var name = (el.getAttribute('data-name') || '').toLowerCase();
+            el.style.display = name.includes(q) ? '' : 'none';
         });
         document.querySelectorAll('.cog-section').forEach(function(sec) {
-            const visible = sec.querySelectorAll('.command-item[style=""], .command-item:not([style])');
-            sec.style.display = visible.length > 0 ? '' : 'none';
+            var hasVisible = false;
+            sec.querySelectorAll('.command-item').forEach(function(el) {
+                if (el.style.display !== 'none') hasVisible = true;
+            });
+            sec.style.display = hasVisible ? '' : 'none';
         });
     });
 })();

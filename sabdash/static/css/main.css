@@ -477,17 +477,35 @@ body::before {
     margin-bottom: 12px;
 }
 
+.cog-header {
+    margin-bottom: 12px;
+}
+
+.cog-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 4px;
+}
+
 .command-item {
     display: flex;
-    align-items: baseline;
-    gap: 12px;
+    flex-direction: column;
+    gap: 4px;
     padding: 8px 12px;
     border-radius: 4px;
     transition: background 0.2s;
+    border-left: 2px solid transparent;
 }
 
 .command-item:hover {
     background: rgba(0,243,255,0.04);
+    border-left-color: rgba(0,243,255,0.3);
+}
+
+.cmd-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
 }
 
 .cmd-name {
@@ -497,9 +515,35 @@ body::before {
     white-space: nowrap;
 }
 
+.cmd-sig {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: rgba(255,255,255,0.3);
+}
+
 .cmd-desc {
     font-size: 13px;
     color: rgba(255,255,255,0.5);
+    padding-left: 2px;
+}
+
+.cmd-subs {
+    padding-left: 20px;
+    border-left: 1px solid rgba(0,243,255,0.1);
+    margin-top: 4px;
+}
+
+.sub-command {
+    padding: 4px 10px;
+}
+
+.sub-command .cmd-name {
+    font-size: 12px;
+    color: rgba(0,243,255,0.7);
+}
+
+.sub-command .cmd-desc {
+    font-size: 12px;
 }
 
 /* === Error Page === */
