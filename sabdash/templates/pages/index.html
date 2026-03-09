@@ -3,81 +3,77 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<section class="dashboard-header">
-    <div class="logo-container">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Sablinova" class="dash-logo" id="dashLogo">
+<section class="hero">
+  <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Sablinova" class="hero-logo">
+  <h1>SabDash</h1>
+  <div class="hero-tag">Project Sablinova // Bot Dashboard</div>
+  <p>
+    Web dashboard for <strong>Project Sablinova</strong>, a feature-packed Discord bot
+    built on Red-DiscordBot. View live stats, browse commands, and manage your servers.
+  </p>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-num">
+        {% if rpc_connected %}
+        <span style="color:#0f0; text-shadow:0 0 10px rgba(0,255,0,0.5);">ON</span>
+        {% else %}
+        <span style="color:#ff3355; text-shadow:0 0 10px rgba(255,51,85,0.5);">OFF</span>
+        {% endif %}
+      </div>
+      <div class="stat-lbl">Status</div>
     </div>
-    <h1 class="dash-title">SABDASH</h1>
-    <p class="dash-subtitle">
-        <span class="glow-letter" style="animation-delay:0s">S</span>ystem
-        <span class="glow-letter" style="animation-delay:0.4s">A</span>dministration
-        <span class="glow-letter" style="animation-delay:0.8s">B</span>ot
-        <span class="glow-letter" style="animation-delay:1.2s">D</span>ashboard
-        <span class="glow-letter" style="animation-delay:1.6s">S</span>uite //
-        <span class="glow-letter" style="animation-delay:2.0s">H</span>ub
-    </p>
+    <div class="stat-box">
+      <div class="stat-num">{{ stats.get('guilds', 0) }}</div>
+      <div class="stat-lbl">Servers</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ '{:,}'.format(stats.get('users', 0)) }}</div>
+      <div class="stat-lbl">Users</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ uptime }}</div>
+      <div class="stat-lbl">Uptime</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ '{:,}'.format(stats.get('text', 0)) }}</div>
+      <div class="stat-lbl">Text CH</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ stats.get('voice', 0) }}</div>
+      <div class="stat-lbl">Voice CH</div>
+    </div>
+  </div>
+
+  {% if bot and bot.get('invite_url') %}
+  <a href="{{ bot.invite_url }}" target="_blank" class="invite">Invite to Server</a>
+  {% endif %}
 </section>
 
-<section class="stats-grid">
-    <div class="stat-card" data-index="0">
-        <div class="stat-dot"></div>
-        <div class="stat-label">STATUS</div>
-        <div class="stat-value">
-            {% if rpc_connected %}
-            <span class="status-online">ONLINE</span>
-            {% else %}
-            <span class="status-offline">OFFLINE</span>
-            {% endif %}
-        </div>
-    </div>
-
-    <div class="stat-card" data-index="1">
-        <div class="stat-dot"></div>
-        <div class="stat-label">SERVERS</div>
-        <div class="stat-value">{{ stats.get('guilds', '—') }}</div>
-    </div>
-
-    <div class="stat-card" data-index="2">
-        <div class="stat-dot"></div>
-        <div class="stat-label">USERS</div>
-        <div class="stat-value">{{ '{:,}'.format(stats.get('users', 0)) if stats.get('users') else '—' }}</div>
-    </div>
-
-    <div class="stat-card" data-index="3">
-        <div class="stat-dot"></div>
-        <div class="stat-label">UPTIME</div>
-        <div class="stat-value">{{ uptime }}</div>
-    </div>
-
-    <div class="stat-card" data-index="4">
-        <div class="stat-dot"></div>
-        <div class="stat-label">TEXT CH</div>
-        <div class="stat-value">{{ '{:,}'.format(stats.get('text', 0)) if stats.get('text') else '—' }}</div>
-    </div>
-
-    <div class="stat-card" data-index="5">
-        <div class="stat-dot"></div>
-        <div class="stat-label">VOICE CH</div>
-        <div class="stat-value">{{ stats.get('voice', '—') }}</div>
-    </div>
-</section>
-
-<section class="quick-links">
-    <a href="{{ url_for('base.commands') }}" class="project-card">
-        <h3>COMMANDS</h3>
-        <p>Browse all available bot commands</p>
-    </a>
-    {% if current_user.is_authenticated %}
-    <a href="#" class="project-card">
-        <h3>GUILDS</h3>
-        <p>Manage your server settings</p>
-    </a>
-    {% endif %}
-    {% if current_user.is_authenticated and current_user.is_owner %}
-    <a href="#" class="project-card">
-        <h3>ADMIN</h3>
-        <p>Bot administration panel</p>
-    </a>
-    {% endif %}
-</section>
+<div class="quick-grid">
+  <a href="{{ url_for('base.commands') }}" class="quick-card">
+    <div class="quick-card-icon">&#x1F4BB;</div>
+    <div class="quick-card-title">Commands</div>
+    <div class="quick-card-desc">Browse all bot commands</div>
+  </a>
+  {% if current_user.is_authenticated %}
+  <a href="#" class="quick-card">
+    <div class="quick-card-icon">&#x2699;&#xFE0F;</div>
+    <div class="quick-card-title">Guilds</div>
+    <div class="quick-card-desc">Manage server settings</div>
+  </a>
+  {% endif %}
+  {% if current_user.is_authenticated and current_user.is_owner %}
+  <a href="#" class="quick-card">
+    <div class="quick-card-icon">&#x1F6E1;&#xFE0F;</div>
+    <div class="quick-card-title">Admin</div>
+    <div class="quick-card-desc">Bot administration</div>
+  </a>
+  {% endif %}
+  <a href="{{ url_for('login.login_page') }}" class="quick-card">
+    <div class="quick-card-icon">&#x1F465;</div>
+    <div class="quick-card-title">Login</div>
+    <div class="quick-card-desc">Discord authentication</div>
+  </a>
+</div>
 {% endblock %}

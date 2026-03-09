@@ -3,91 +3,119 @@
 {% block title %}Commands{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <h1 class="page-title">COMMAND INDEX</h1>
-    <p class="page-subtitle">All available bot commands</p>
+{% if not connected %}
+<section class="hero">
+  <h1>Commands</h1>
+  <div class="hero-tag">Project Sablinova // Command Reference</div>
+  <div class="status-notice">
+    <p>Bot is currently offline. Command data unavailable.</p>
+  </div>
+</section>
+{% elif not categories %}
+<section class="hero">
+  <h1>Commands</h1>
+  <div class="hero-tag">Project Sablinova // Command Reference</div>
+  <div class="status-notice">
+    <p>No command data available.</p>
+  </div>
+</section>
+{% else %}
+<section class="hero">
+  <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Sablinova" class="hero-logo">
+  <h1>Bot Commands</h1>
+  <div class="hero-tag">Project Sablinova // Command Reference</div>
+  <p>
+    The complete command reference for <strong>Project Sablinova</strong>.
+    Browse by category, search for any command, or expand a cog to see every subcommand.
+  </p>
+
+  <div class="stats">
+    <div class="stat-box">
+      <div class="stat-num">{{ cog_count }}</div>
+      <div class="stat-lbl">Cogs</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ cmd_count }}</div>
+      <div class="stat-lbl">Commands</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-num">{{ categories|length }}</div>
+      <div class="stat-lbl">Categories</div>
+    </div>
+  </div>
 </section>
 
-<section class="commands-container">
-    {% if not connected %}
-    <div class="status-notice">
-        <p>Bot is currently offline. Command data unavailable.</p>
-    </div>
-    {% elif not commands %}
-    <div class="status-notice">
-        <p>No command data available.</p>
-    </div>
-    {% else %}
-    <div class="commands-search">
-        <input type="text" class="search-input" id="commandSearch" placeholder="SEARCH COMMANDS..." autocomplete="off">
-    </div>
-    <div class="commands-grid" id="commandsGrid">
-        {% for cog_name, cog_data in commands.items() %}
-        <div class="cog-section" data-cog="{{ cog_name }}">
-            <div class="cog-header">
-                <h2 class="cog-title">{{ cog_data.get('name', cog_name) if cog_data is mapping else cog_name }}</h2>
-                {% if cog_data is mapping and cog_data.get('description') %}
-                <p class="cog-desc">{{ cog_data['description'] }}</p>
-                {% endif %}
-            </div>
-            {% if cog_data is mapping and cog_data.get('commands') is iterable %}
-                {% for cmd in cog_data['commands'] %}
-                <div class="command-item" data-name="{{ cmd.get('name', '') if cmd is mapping else cmd }}">
-                    <div class="cmd-main">
-                        <code class="cmd-name">{{ cmd.get('name', '') if cmd is mapping else cmd }}</code>
-                        {% if cmd is mapping and cmd.get('signature') %}
-                        <span class="cmd-sig">{{ cmd['signature'] }}</span>
-                        {% endif %}
-                    </div>
-                    {% if cmd is mapping and cmd.get('short_description') %}
-                    <span class="cmd-desc">{{ cmd['short_description'] }}</span>
-                    {% endif %}
-                    {% if cmd is mapping and cmd.get('subs') %}
-                    <div class="cmd-subs">
-                        {% for sub in cmd['subs'] %}
-                        <div class="command-item sub-command" data-name="{{ sub.get('name', '') }}">
-                            <div class="cmd-main">
-                                <code class="cmd-name">{{ sub.get('name', '') }}</code>
-                                {% if sub.get('signature') %}
-                                <span class="cmd-sig">{{ sub['signature'] }}</span>
-                                {% endif %}
-                            </div>
-                            {% if sub.get('short_description') %}
-                            <span class="cmd-desc">{{ sub['short_description'] }}</span>
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-                {% endfor %}
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-</section>
-{% endblock %}
+<div class="search">
+  <span class="search-icon">&#x1F50D;</span>
+  <input type="text" class="search-input" id="search" placeholder="Search commands or cogs..." autocomplete="off" spellcheck="false">
+  <div class="search-meta" id="searchMeta"></div>
+</div>
 
-{% block scripts %}
-<script>
-(function() {
-    var search = document.getElementById('commandSearch');
-    if (!search) return;
-    search.addEventListener('input', function() {
-        var q = this.value.toLowerCase();
-        document.querySelectorAll('.command-item').forEach(function(el) {
-            var name = (el.getAttribute('data-name') || '').toLowerCase();
-            el.style.display = name.includes(q) ? '' : 'none';
-        });
-        document.querySelectorAll('.cog-section').forEach(function(sec) {
-            var hasVisible = false;
-            sec.querySelectorAll('.command-item').forEach(function(el) {
-                if (el.style.display !== 'none') hasVisible = true;
-            });
-            sec.style.display = hasVisible ? '' : 'none';
-        });
-    });
-})();
-</script>
+<div class="controls">
+  <button class="ctrl" onclick="toggleAll(true)">Expand All</button>
+  <button class="ctrl" onclick="toggleAll(false)">Collapse All</button>
+</div>
+
+<section class="toc">
+  <div class="toc-title">Categories</div>
+  <div class="toc-grid">
+    {% for cat in categories %}
+    <a href="#{{ cat.slug }}" class="toc-card">
+      <div class="toc-icon">{{ cat.icon }}</div>
+      <div class="toc-name">{{ cat.name }}</div>
+      <div class="toc-stat">{{ cat.cog_count }} cogs &middot; {{ cat.cmd_count }} cmds</div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="no-results" id="noResults">No commands found matching your search.</div>
+
+{% for cat in categories %}
+<section class="category" id="{{ cat.slug }}">
+  <div class="cat-header">
+    <span class="cat-icon">{{ cat.icon }}</span>
+    <div>
+      <h2>{{ cat.name }}</h2>
+      <p class="cat-desc">{{ cat.description }}</p>
+    </div>
+    <span class="cat-badge">{{ cat.cmd_count }}</span>
+  </div>
+
+  {% for cog in cat.cogs %}
+  <div class="cog" data-cog="{{ cog.name|lower }}">
+    <button class="cog-head" aria-expanded="false" onclick="toggleCog(this)">
+      <span class="cog-arrow">&#x25B6;</span>
+      <span class="cog-title">{{ cog.name }}</span>
+      <span class="cog-desc">{{ cog.description or '' }}</span>
+      <span class="cog-badge">{{ cog.cmd_count }}</span>
+    </button>
+    <div class="cog-body">
+      <table class="cmd-table">
+        <thead>
+          <tr><th>Command</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          {% for cmd in cog.flat_commands %}
+          <tr class="depth-{{ cmd.depth }}" data-cmd="{{ cmd.full_name }}">
+            <td class="cmd-cell">
+              {% if cmd.depth == 0 %}
+              <span class="cmd-root">{{ cmd.prefix }}{{ cmd.name }}</span>
+              {% else %}
+              <span class="indent">&#x2514; </span>
+              {% if cmd.parent_chain %}<span class="cmd-parent">{{ cmd.parent_chain }} </span>{% endif %}
+              <span class="cmd-child">{{ cmd.name }}</span>
+              {% endif %}
+            </td>
+            <td class="desc-cell">{{ cmd.description }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endfor %}
+{% endif %}
 {% endblock %}

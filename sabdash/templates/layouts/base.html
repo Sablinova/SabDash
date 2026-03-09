@@ -1,56 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SabDash{% endblock %} // Project Sablinova</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-    {% block head %}{% endblock %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SabDash{% endblock %} // Project Sablinova</title>
+  <meta name="description" content="SabDash — Web dashboard for Project Sablinova Discord bot.">
+  <meta property="og:title" content="SabDash // Project Sablinova">
+  <meta property="og:description" content="Web dashboard for the Project Sablinova Discord bot.">
+  <meta property="og:image" content="{{ url_for('static', filename='img/logo.png', _external=True) }}">
+  <meta name="theme-color" content="#00f3ff">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  {% block head %}{% endblock %}
 </head>
 <body>
-    <!-- Scanlines overlay -->
+
+  <!-- Enter Screen -->
+  <div id="enterScreen">
     <div class="scanlines"></div>
+    <div class="enter-particles" id="enterParticles"></div>
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Enter" class="enter-logo">
+    <div class="enter-ring"></div>
+    <div class="enter-ring"></div>
+    <div class="enter-ring"></div>
+    <div class="enter-text">Click to Enter</div>
+  </div>
 
-    <!-- Grid overlay -->
-    <div class="grid-overlay"></div>
+  <!-- CRT Flicker Transition -->
+  <div id="crtFlicker">
+    <div class="flash"></div>
+    <div class="static"></div>
+    <div class="scanline-burst"></div>
+    <div class="h-line"></div>
+  </div>
 
-    <!-- Particles -->
-    <div class="particles" id="particles"></div>
+  <!-- Floating Command Background -->
+  <div id="hackerBg"></div>
 
-    <!-- Navigation -->
+  <!-- Volume Control -->
+  <div class="volume-control" id="volumeControl">
+    <span class="volume-icon" id="volumeIcon">&#x1F50A;</span>
+    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="10">
+    <span class="volume-pct" id="volumePct">10%</span>
+  </div>
+
+  <!-- Main App (hidden until enter screen completes) -->
+  <div id="mainApp">
+
+    <div class="particles">
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+      <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+    <div class="vignette"></div>
+
     {% include "includes/nav.html" %}
 
     <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="flash-container">
-        {% for category, message in messages %}
-        <div class="flash flash-{{ category }}">{{ message }}</div>
-        {% endfor %}
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
     </div>
     {% endif %}
     {% endwith %}
 
-    <!-- Main content -->
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Footer -->
-    {% include "includes/footer.html" %}
-
-    <!-- Volume control -->
-    <div class="volume-control" id="volumeControl">
-        <span class="volume-icon" id="volumeIcon">&#x1f509;</span>
-        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="10">
-        <span class="volume-pct" id="volumePct">10%</span>
+    <div class="content">
+      {% block content %}{% endblock %}
     </div>
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    {% block scripts %}{% endblock %}
+    {% include "includes/footer.html" %}
+
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Scroll to top">&uarr;</button>
+
+  </div><!-- /mainApp -->
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
