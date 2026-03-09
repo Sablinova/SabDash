@@ -1,0 +1,63 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Commands{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="page-title">COMMAND INDEX</h1>
+    <p class="page-subtitle">All available bot commands</p>
+</section>
+
+<section class="commands-container">
+    {% if not connected %}
+    <div class="status-notice">
+        <p>Bot is currently offline. Command data unavailable.</p>
+    </div>
+    {% elif not commands %}
+    <div class="status-notice">
+        <p>No command data available.</p>
+    </div>
+    {% else %}
+    <div class="commands-search">
+        <input type="text" class="search-input" id="commandSearch" placeholder="SEARCH COMMANDS..." autocomplete="off">
+    </div>
+    <div class="commands-grid" id="commandsGrid">
+        {% for cog_name, cog_data in commands.items() %}
+        <div class="cog-section" data-cog="{{ cog_name }}">
+            <h2 class="cog-title">{{ cog_name }}</h2>
+            {% if cog_data is mapping %}
+                {% for cmd_name, cmd_data in cog_data.items() %}
+                <div class="command-item" data-name="{{ cmd_name }}">
+                    <code class="cmd-name">{{ cmd_name }}</code>
+                    {% if cmd_data is mapping and cmd_data.get('description') %}
+                    <span class="cmd-desc">{{ cmd_data['description'] }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const search = document.getElementById('commandSearch');
+    if (!search) return;
+    search.addEventListener('input', function() {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('.command-item').forEach(function(el) {
+            const name = el.getAttribute('data-name') || '';
+            el.style.display = name.toLowerCase().includes(q) ? '' : 'none';
+        });
+        document.querySelectorAll('.cog-section').forEach(function(sec) {
+            const visible = sec.querySelectorAll('.command-item[style=""], .command-item:not([style])');
+            sec.style.display = visible.length > 0 ? '' : 'none';
+        });
+    });
+})();
+</script>
+{% endblock %}

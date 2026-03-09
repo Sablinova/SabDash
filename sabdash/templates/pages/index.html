@@ -1,0 +1,83 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard-header">
+    <div class="logo-container">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Sablinova" class="dash-logo" id="dashLogo">
+    </div>
+    <h1 class="dash-title">SABDASH</h1>
+    <p class="dash-subtitle">
+        <span class="glow-letter" style="animation-delay:0s">S</span>ystem
+        <span class="glow-letter" style="animation-delay:0.4s">A</span>dministration
+        <span class="glow-letter" style="animation-delay:0.8s">B</span>ot
+        <span class="glow-letter" style="animation-delay:1.2s">D</span>ashboard
+        <span class="glow-letter" style="animation-delay:1.6s">S</span>uite //
+        <span class="glow-letter" style="animation-delay:2.0s">H</span>ub
+    </p>
+</section>
+
+<section class="stats-grid">
+    <div class="stat-card" data-index="0">
+        <div class="stat-dot"></div>
+        <div class="stat-label">STATUS</div>
+        <div class="stat-value">
+            {% if rpc_connected %}
+            <span class="status-online">ONLINE</span>
+            {% else %}
+            <span class="status-offline">OFFLINE</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card" data-index="1">
+        <div class="stat-dot"></div>
+        <div class="stat-label">SERVERS</div>
+        <div class="stat-value">{{ stats.get('guilds', '—') }}</div>
+    </div>
+
+    <div class="stat-card" data-index="2">
+        <div class="stat-dot"></div>
+        <div class="stat-label">USERS</div>
+        <div class="stat-value">{{ '{:,}'.format(stats.get('users', 0)) if stats.get('users') else '—' }}</div>
+    </div>
+
+    <div class="stat-card" data-index="3">
+        <div class="stat-dot"></div>
+        <div class="stat-label">UPTIME</div>
+        <div class="stat-value">{{ uptime }}</div>
+    </div>
+
+    <div class="stat-card" data-index="4">
+        <div class="stat-dot"></div>
+        <div class="stat-label">TEXT CH</div>
+        <div class="stat-value">{{ '{:,}'.format(stats.get('text', 0)) if stats.get('text') else '—' }}</div>
+    </div>
+
+    <div class="stat-card" data-index="5">
+        <div class="stat-dot"></div>
+        <div class="stat-label">VOICE CH</div>
+        <div class="stat-value">{{ stats.get('voice', '—') }}</div>
+    </div>
+</section>
+
+<section class="quick-links">
+    <a href="{{ url_for('base.commands') }}" class="project-card">
+        <h3>COMMANDS</h3>
+        <p>Browse all available bot commands</p>
+    </a>
+    {% if current_user.is_authenticated %}
+    <a href="#" class="project-card">
+        <h3>GUILDS</h3>
+        <p>Manage your server settings</p>
+    </a>
+    {% endif %}
+    {% if current_user.is_authenticated and current_user.is_owner %}
+    <a href="#" class="project-card">
+        <h3>ADMIN</h3>
+        <p>Bot administration panel</p>
+    </a>
+    {% endif %}
+</section>
+{% endblock %}
