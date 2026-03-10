@@ -1,8 +1,10 @@
 /* SabDash — Main JavaScript
    Ports the full 2b.sablinova.com/bot/ interactivity:
-   Enter screen, CRT flicker + power-on SFX, floating command background,
-   collapsible cogs, search with meta text, scroll-to-top, volume control,
-   nav hamburger, keyboard shortcuts, flash auto-dismiss.
+   Enter screen (first visit only), CRT flicker + power-on SFX,
+   quick CRT channel-switch transition (return visits),
+   floating command background, collapsible cogs, search with meta text,
+   scroll-to-top, volume control, nav hamburger, keyboard shortcuts,
+   hover SFX, flash auto-dismiss, nav link interception.
 */
 (function() {
     'use strict';
@@ -21,6 +23,7 @@
     /* =========================================================
        CRT Power-On SFX  (Web Audio API — no files needed)
        Sine sweep 60->2000->800Hz + white noise burst + square beep 1200Hz
+       Used on first visit only (full boot sequence)
        ========================================================= */
     function playCrtOn() {
         try {
@@ -77,7 +80,56 @@
     }
 
     /* =========================================================
+       CRT Channel-Switch SFX (Web Audio API)
+       Short sine blip at 600Hz, ~100ms — subtle "click" sound
+       Used on return visits and nav link transitions
+       ========================================================= */
+    function playCrtSwitch() {
+        try {
+            var ctx = getAudioCtx();
+            var now = ctx.currentTime;
+            var master = ctx.createGain();
+            master.gain.setValueAtTime(0.12, now);
+            master.connect(ctx.destination);
+
+            // Short sine blip
+            var blip = ctx.createOscillator();
+            var blipGain = ctx.createGain();
+            blip.type = 'sine';
+            blip.frequency.setValueAtTime(600, now);
+            blip.frequency.exponentialRampToValueAtTime(900, now + 0.04);
+            blip.frequency.exponentialRampToValueAtTime(400, now + 0.10);
+            blipGain.gain.setValueAtTime(0.3, now);
+            blipGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+            blip.connect(blipGain);
+            blipGain.connect(master);
+            blip.start(now);
+            blip.stop(now + 0.12);
+
+            // Tiny noise crackle
+            var bufSize = Math.floor(ctx.sampleRate * 0.06);
+            var noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+            var noiseData = noiseBuf.getChannelData(0);
+            for (var i = 0; i < bufSize; i++) {
+                noiseData[i] = (Math.random() * 2 - 1) * 0.3;
+            }
+            var noise = ctx.createBufferSource();
+            noise.buffer = noiseBuf;
+            var noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.15, now);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+            noise.connect(noiseGain);
+            noiseGain.connect(master);
+            noise.start(now);
+            noise.stop(now + 0.06);
+        } catch(e) {}
+    }
+
+    /* =========================================================
        Enter Screen + CRT Flicker Transition
+       Two paths:
+         1. First visit — full enter screen, click to enter, full CRT boot
+         2. Return visit — skip enter screen, quick CRT channel-switch
        ========================================================= */
     var hasEntered = false;
 
@@ -92,13 +144,13 @@
 
         if (!enterScreen || !crtFlicker || !mainApp) return;
 
-        // Play CRT power-on SFX
+        // Play CRT power-on SFX (full boot sound)
         playCrtOn();
 
         // Hide enter screen
         enterScreen.classList.add('hidden');
 
-        // Fire CRT flicker transition
+        // Fire CRT flicker transition (full 1s)
         crtFlicker.classList.add('active');
 
         // After 1s transition completes, show main app
@@ -110,33 +162,54 @@
             // Start floating command background
             startFloatingCmds();
 
-            // Mark session as entered
+            // Mark session as entered (subsequent pages skip enter screen)
             sessionStorage.setItem('sabdash_entered', '1');
         }, 1000);
     }
 
-    function initEnterScreen() {
-        var enterScreen = document.getElementById('enterScreen');
+    function quickReveal() {
+        // Return visit path — enter screen already hidden by CSS (html.entered rule)
+        var crtFlicker = document.getElementById('crtFlicker');
         var mainApp = document.getElementById('mainApp');
         var volumeCtrl = document.getElementById('volumeControl');
 
-        if (!enterScreen) return;
+        if (!mainApp) return;
 
-        // If already entered this session, skip enter screen
-        if (sessionStorage.getItem('sabdash_entered') === '1') {
-            hasEntered = true;
-            enterScreen.classList.add('hidden');
-            if (mainApp) mainApp.classList.add('visible');
-            if (volumeCtrl) volumeCtrl.classList.add('visible');
-            startFloatingCmds();
-            return;
+        hasEntered = true;
+
+        // Play quick channel-switch SFX
+        playCrtSwitch();
+
+        // Fire quick CRT flicker (~300ms)
+        if (crtFlicker) {
+            crtFlicker.classList.add('quick');
         }
 
-        // Spawn enter screen particles
-        spawnEnterParticles();
+        // Show main app + volume control
+        setTimeout(function() {
+            if (crtFlicker) crtFlicker.classList.remove('quick');
+            mainApp.classList.add('visible');
+            if (volumeCtrl) volumeCtrl.classList.add('visible');
 
-        // Click anywhere on enter screen to enter
-        enterScreen.addEventListener('click', handleEnter);
+            // Start floating command background
+            startFloatingCmds();
+        }, 320);
+    }
+
+    function initEnterScreen() {
+        var isReturnVisit = sessionStorage.getItem('sabdash_entered') === '1';
+
+        if (isReturnVisit) {
+            // Return visit — quick CRT channel-switch, no enter screen
+            quickReveal();
+        } else {
+            // First visit — show enter screen, wait for click
+            spawnEnterParticles();
+            var enterScreen = document.getElementById('enterScreen');
+            if (enterScreen) {
+                enterScreen.addEventListener('click', handleEnter);
+            }
+        }
     }
 
     function spawnEnterParticles() {
@@ -150,6 +223,63 @@
             p.style.animationDelay = (Math.random() * 8) + 's';
             container.appendChild(p);
         }
+    }
+
+    /* =========================================================
+       Nav Link Interception — CRT-out transition before navigation
+       Internal links get a quick CRT-out animation (~250ms)
+       before the browser navigates to the new page
+       ========================================================= */
+    function initNavInterception() {
+        // Only intercept internal nav links (same origin)
+        document.addEventListener('click', function(e) {
+            var link = e.target.closest('a');
+            if (!link) return;
+
+            var href = link.getAttribute('href');
+            if (!href) return;
+
+            // Skip: external links, anchor links, javascript: links, links with modifiers
+            if (link.target === '_blank' || link.target === '_new') return;
+            if (href.charAt(0) === '#') return;
+            if (href.indexOf('javascript:') === 0) return;
+            if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+            // Skip external URLs
+            try {
+                var url = new URL(href, window.location.origin);
+                if (url.origin !== window.location.origin) return;
+            } catch(err) {
+                return;
+            }
+
+            // Skip if same page
+            if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+
+            // Intercept: play CRT-out animation, then navigate
+            e.preventDefault();
+
+            var mainApp = document.getElementById('mainApp');
+            var crtFlicker = document.getElementById('crtFlicker');
+
+            // Play switch SFX
+            playCrtSwitch();
+
+            // CRT-out animation on main content
+            if (mainApp) {
+                mainApp.classList.add('crt-out');
+            }
+
+            // Quick CRT flicker
+            if (crtFlicker) {
+                crtFlicker.classList.add('quick');
+            }
+
+            // Navigate after animation completes
+            setTimeout(function() {
+                window.location.href = href;
+            }, 260);
+        });
     }
 
     /* =========================================================
@@ -493,6 +623,7 @@
        ========================================================= */
     document.addEventListener('DOMContentLoaded', function() {
         initEnterScreen();
+        initNavInterception();
         initScrollTop();
         initVolumeControl();
         initNavToggle();

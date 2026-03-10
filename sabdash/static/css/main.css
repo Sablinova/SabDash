@@ -35,6 +35,8 @@ body {
   gap:30px; overflow:hidden; cursor:pointer;
 }
 #enterScreen.hidden { display:none; }
+/* CSS-level FOUC prevention — entered class set by inline <script> before body renders */
+html.entered #enterScreen { display:none !important; }
 #enterScreen .scanlines {
   position:absolute; inset:0;
   background:repeating-linear-gradient(0deg,rgba(0,243,255,0.03) 0px,transparent 1px,transparent 3px);
@@ -139,6 +141,42 @@ body {
   30% { transform:scaleX(1.1); opacity:0.8; }
   50% { transform:scaleX(1); opacity:0.5; height:4px; }
   100% { transform:scaleX(1); opacity:0; height:100vh; top:0; }
+}
+
+/* == Quick CRT Channel-Switch Transition (return visits) == */
+#crtFlicker.quick { display:block; }
+#crtFlicker.quick .flash {
+  animation:crtFlashQuick 0.3s ease-out forwards;
+}
+@keyframes crtFlashQuick {
+  0% { opacity:0; }
+  8% { opacity:0.6; }
+  20% { opacity:0.05; }
+  40% { opacity:0.3; }
+  60% { opacity:0.02; }
+  100% { opacity:0; }
+}
+#crtFlicker.quick .static {
+  animation:staticBurstQuick 0.06s steps(6) 2 forwards;
+}
+@keyframes staticBurstQuick {
+  0% { transform:translate(0,0); opacity:0.08; }
+  50% { transform:translate(-2px,1px); opacity:0.10; }
+  100% { transform:translate(1px,-1px); opacity:0; }
+}
+#crtFlicker.quick .scanline-burst {
+  animation:scanBurstQuick 0.3s ease-out forwards;
+}
+@keyframes scanBurstQuick {
+  0% { opacity:0.8; } 100% { opacity:0; }
+}
+#crtFlicker.quick .h-line {
+  animation:hLineQuick 0.25s ease-out forwards;
+}
+@keyframes hLineQuick {
+  0% { transform:scaleX(0); opacity:0.8; }
+  40% { transform:scaleX(1); opacity:0.4; height:2px; }
+  100% { transform:scaleX(1); opacity:0; height:60vh; top:20vh; }
 }
 
 /* == Floating Command Background == */
@@ -305,6 +343,21 @@ nav {
 /* == Main App wrapper == */
 #mainApp { display:none; }
 #mainApp.visible { display:block; }
+/* Quick-reveal: on return visits, mainApp fades in with the content */
+#mainApp.visible .content { animation:contentFadeIn 0.4s ease-out forwards; }
+@keyframes contentFadeIn {
+  0% { opacity:0; transform:translateY(8px); }
+  100% { opacity:1; transform:translateY(0); }
+}
+/* CRT out transition — applied to mainApp before navigating away */
+#mainApp.crt-out {
+  animation:crtOut 0.25s ease-in forwards;
+}
+@keyframes crtOut {
+  0% { opacity:1; filter:none; }
+  40% { opacity:0.7; filter:brightness(1.3) contrast(1.2); }
+  100% { opacity:0; filter:brightness(2) contrast(0.5) saturate(0); }
+}
 
 /* == Layout == */
 .content {

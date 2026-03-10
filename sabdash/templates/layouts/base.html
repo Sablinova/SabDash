@@ -12,6 +12,12 @@
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <script>
+    /* Prevent FOUC: if already entered this session, mark <html> so CSS hides enter screen instantly */
+    if (sessionStorage.getItem('sabdash_entered') === '1') {
+      document.documentElement.classList.add('entered');
+    }
+  </script>
   {% block head %}{% endblock %}
 </head>
 <body>
