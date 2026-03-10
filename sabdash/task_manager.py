@@ -84,10 +84,23 @@ class TaskManager:
             self.app.variables = result
             self.app.config["RPC_CONNECTED"] = True
             logger.info("GET_VARIABLES fetched successfully")
+
+            # Rebuild category cache with fresh command data
+            self._rebuild_category_cache()
+
             return True
         else:
             logger.warning("GET_VARIABLES failed: %s", result)
             return False
+
+    def _rebuild_category_cache(self):
+        """Rebuild the cached category/command data from current variables."""
+        try:
+            from sabdash.routes.base import build_category_cache
+
+            build_category_cache(self.app)
+        except Exception:
+            logger.exception("Failed to rebuild category cache")
 
     def _poll_data(self):
         """Continuously poll GET_DATA."""

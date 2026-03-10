@@ -836,6 +836,37 @@ def _count_commands(cmds):
     return count
 
 
+def build_category_cache(app):
+    """Build categorized command data and store it on the app object.
+
+    Called by the task manager whenever GET_VARIABLES returns new data.
+    This runs the auto-categorization + keyword matching once, and caches
+    the full result so page renders just read the cache.
+    """
+    commands_data = app.variables.get("commands", {})
+    if not commands_data:
+        return
+
+    bot = app.variables.get("bot", {})
+    prefixes = bot.get("prefixes", [])
+    prefix = prefixes[0] if prefixes else "[p]"
+
+    categories = _build_categories(commands_data, prefix)
+    cog_count = sum(c["cog_count"] for c in categories)
+    cmd_count = sum(c["cmd_count"] for c in categories)
+
+    app.cached_categories = categories
+    app.cached_cog_count = cog_count
+    app.cached_cmd_count = cmd_count
+
+    logger.info(
+        "Category cache rebuilt: %d categories, %d cogs, %d commands",
+        len(categories),
+        cog_count,
+        cmd_count,
+    )
+
+
 def _build_categories(commands_data, prefix="[p]"):
     """Group cogs into categories and flatten command trees.
 
@@ -914,17 +945,12 @@ def index():
 def commands():
     """Bot commands listing with category grouping."""
     app = current_app._get_current_object()
-    commands_data = app.variables.get("commands", {})
     connected = app.config.get("RPC_CONNECTED", False)
 
-    # Get prefix for display
-    bot = app.variables.get("bot", {})
-    prefixes = bot.get("prefixes", [])
-    prefix = prefixes[0] if prefixes else "[p]"
-
-    categories = _build_categories(commands_data, prefix=prefix)
-    cog_count = sum(c["cog_count"] for c in categories)
-    cmd_count = sum(c["cmd_count"] for c in categories)
+    # Use cached categories built by the task manager
+    categories = getattr(app, "cached_categories", [])
+    cog_count = getattr(app, "cached_cog_count", 0)
+    cmd_count = getattr(app, "cached_cmd_count", 0)
 
     return render_template(
         "pages/commands.html",
