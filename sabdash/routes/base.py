@@ -10,8 +10,12 @@ logger = logging.getLogger("sabdash.routes.base")
 base_bp = Blueprint("base", __name__)
 
 # ── Category definitions ──────────────────────────────────────────────
-# Maps cog names (lowercased) to a category.  Cogs not listed land in "Other".
-# Format: {cog_name_lower: category_key}
+# Defines the available categories.  Cogs are assigned via:
+#   1. Manual overrides in COG_TO_CATEGORY (highest priority)
+#   2. Keyword matching in CATEGORY_KEYWORDS (automatic)
+#   3. Fallback to "Other"
+# Auto-categorization runs on every page render using fresh RPC data,
+# so new cogs are categorized immediately without code changes.
 
 CATEGORY_DEFS = [
     {
@@ -106,8 +110,11 @@ CATEGORY_DEFS = [
     },
 ]
 
+# ── Manual overrides ───────────────────────────────────────────────────
+# Cogs listed here always map to the specified category regardless of
+# keyword matching.  Cog names are lowercased before lookup.
 COG_TO_CATEGORY = {
-    # ── Moderation ─────────────────────────────────────────────────────
+    # Moderation
     "mod": "moderation",
     "modlog": "moderation",
     "filter": "moderation",
@@ -128,7 +135,6 @@ COG_TO_CATEGORY = {
     "altdentifier": "moderation",
     "bancheck": "moderation",
     "banmessage": "moderation",
-    "clearChannel": "moderation",
     "clearchannel": "moderation",
     "fakemod": "moderation",
     "globalban": "moderation",
@@ -138,7 +144,7 @@ COG_TO_CATEGORY = {
     "security": "moderation",
     "extendedmodlog": "moderation",
     "sabhoneypot": "moderation",
-    # ── Music & Audio ──────────────────────────────────────────────────
+    # Music & Audio
     "audio": "music",
     "music": "music",
     "playlist": "music",
@@ -151,7 +157,7 @@ COG_TO_CATEGORY = {
     "shazam": "music",
     "lastfm": "music",
     "spotify": "music",
-    # ── Fun & Games ────────────────────────────────────────────────────
+    # Fun & Games
     "trivia": "fun",
     "fun": "fun",
     "games": "fun",
@@ -180,7 +186,6 @@ COG_TO_CATEGORY = {
     "genshin": "fun",
     "hitormiss": "fun",
     "insult": "fun",
-    "kill": "fun",
     "lenny": "fun",
     "lovecalc": "fun",
     "meme": "fun",
@@ -194,7 +199,7 @@ COG_TO_CATEGORY = {
     "typeracer": "fun",
     "uttt": "fun",
     "wordlegame": "fun",
-    # ── Economy & Currency ─────────────────────────────────────────────
+    # Economy & Currency
     "economy": "economy",
     "bank": "economy",
     "shop": "economy",
@@ -206,7 +211,7 @@ COG_TO_CATEGORY = {
     "economytrack": "economy",
     "extendedeconomy": "economy",
     "unbelievaboat": "economy",
-    # ── Utility & Tools ────────────────────────────────────────────────
+    # Utility & Tools
     "general": "utility",
     "utility": "utility",
     "utils": "utility",
@@ -288,7 +293,7 @@ COG_TO_CATEGORY = {
     "vrtutils": "utility",
     "whoplays": "utility",
     "ip": "utility",
-    # ── AI & Image Generation ──────────────────────────────────────────
+    # AI & Image Generation
     "chatgpt": "ai",
     "openai": "ai",
     "aiart": "ai",
@@ -300,7 +305,7 @@ COG_TO_CATEGORY = {
     "aitools": "ai",
     "fluximggen": "ai",
     "imggen": "ai",
-    # ── Image & Media ──────────────────────────────────────────────────
+    # Image & Media
     "image": "media",
     "imagemaker": "media",
     "addimage": "media",
@@ -316,7 +321,7 @@ COG_TO_CATEGORY = {
     "doujin": "media",
     "rydcog": "media",
     "ytd": "media",
-    # ── Server Management ──────────────────────────────────────────────
+    # Server Management
     "admin": "servermgmt",
     "permissions": "servermgmt",
     "autorole": "servermgmt",
@@ -360,7 +365,7 @@ COG_TO_CATEGORY = {
     "namechanger": "servermgmt",
     "statusrole": "servermgmt",
     "stripeidentity": "servermgmt",
-    # ── Tags & Custom Content ──────────────────────────────────────────
+    # Tags & Custom Content
     "tags": "tags",
     "customcom": "tags",
     "cc": "tags",
@@ -372,7 +377,7 @@ COG_TO_CATEGORY = {
     "autoresponder": "tags",
     "slashtags": "tags",
     "commandsbuttons": "tags",
-    # ── Emoji & Reactions ──────────────────────────────────────────────
+    # Emoji & Reactions
     "reactrole": "emoji",
     "reactionroles": "emoji",
     "emojimix": "emoji",
@@ -384,7 +389,7 @@ COG_TO_CATEGORY = {
     "emojimixup": "emoji",
     "emojisteal": "emoji",
     "emotes": "emoji",
-    # ── Social & Profiles ──────────────────────────────────────────────
+    # Social & Profiles
     "leveler": "social",
     "levelup": "social",
     "experience": "social",
@@ -398,7 +403,7 @@ COG_TO_CATEGORY = {
     "bday": "social",
     "wordstats": "social",
     "teachme": "social",
-    # ── Feeds & Notifications ──────────────────────────────────────────
+    # Feeds & Notifications
     "rss": "feeds",
     "youtube": "feeds",
     "twitch": "feeds",
@@ -416,7 +421,7 @@ COG_TO_CATEGORY = {
     "githubcards": "feeds",
     "cloudflare": "feeds",
     "uptimeresponder": "feeds",
-    # ── Logging & Statistics ───────────────────────────────────────────
+    # Logging & Statistics
     "logging": "logging",
     "messagelogs": "logging",
     "auditlog": "logging",
@@ -430,7 +435,7 @@ COG_TO_CATEGORY = {
     "invites": "logging",
     "stattrack": "logging",
     "tidbstats": "logging",
-    # ── Bot System & Core ──────────────────────────────────────────────
+    # Bot System & Core
     "core": "core",
     "owner": "core",
     "cog": "core",
@@ -458,6 +463,316 @@ COG_TO_CATEGORY = {
     "fluxerbridge": "core",
     "rift": "core",
 }
+
+
+# ── Auto-categorization keywords ──────────────────────────────────────
+# Each category has a list of keywords.  When a cog is NOT in the manual
+# override dict, its name and description are scanned against these.
+# The category with the most keyword hits wins.  Ties go to the first
+# category in definition order.  Zero hits -> "other".
+#
+# Keywords are matched as whole words (word-boundary regex) against the
+# lowercased cog name + description.  Keep them lowercase.
+CATEGORY_KEYWORDS = {
+    "moderation": [
+        "ban",
+        "kick",
+        "mute",
+        "warn",
+        "filter",
+        "spam",
+        "nuke",
+        "lockdown",
+        "moderate",
+        "moderation",
+        "modlog",
+        "automod",
+        "punish",
+        "infraction",
+        "timeout",
+        "quarantine",
+        "raid",
+        "honeypot",
+        "blocklist",
+        "purge",
+        "silence",
+        "censor",
+    ],
+    "music": [
+        "music",
+        "audio",
+        "song",
+        "playlist",
+        "lyrics",
+        "voice",
+        "play",
+        "queue",
+        "now playing",
+        "soundboard",
+        "sfx",
+        "spotify",
+        "lastfm",
+        "shazam",
+        "listen",
+        "track",
+    ],
+    "fun": [
+        "game",
+        "trivia",
+        "joke",
+        "meme",
+        "random",
+        "fun",
+        "casino",
+        "hangman",
+        "tictactoe",
+        "rps",
+        "roll",
+        "flip",
+        "dare",
+        "truth",
+        "riddle",
+        "battle",
+        "snake",
+        "wordle",
+        "insult",
+        "compliment",
+        "lenny",
+        "crab",
+        "race",
+        "entertainment",
+        "minigame",
+        "mini-game",
+        "play",
+    ],
+    "economy": [
+        "economy",
+        "bank",
+        "credit",
+        "currency",
+        "shop",
+        "slot",
+        "heist",
+        "gambling",
+        "wallet",
+        "money",
+        "coin",
+        "balance",
+        "pay",
+        "deposit",
+        "withdraw",
+    ],
+    "utility": [
+        "utility",
+        "tool",
+        "convert",
+        "translate",
+        "weather",
+        "remind",
+        "poll",
+        "timer",
+        "calculator",
+        "dictionary",
+        "lookup",
+        "search",
+        "info",
+        "ping",
+        "qr",
+        "encode",
+        "decode",
+        "hash",
+        "snipe",
+        "quote",
+        "giveaway",
+        "ticket",
+        "suggest",
+        "bookmark",
+        "note",
+        "export",
+        "download",
+        "speed",
+        "scan",
+        "fact",
+    ],
+    "ai": [
+        "ai",
+        "openai",
+        "chatgpt",
+        "gpt",
+        "dall-e",
+        "dalle",
+        "stable diffusion",
+        "generate image",
+        "artificial intelligence",
+        "machine learning",
+        "neural",
+        "llm",
+        "prompt",
+    ],
+    "media": [
+        "image",
+        "photo",
+        "picture",
+        "gif",
+        "video",
+        "media",
+        "movie",
+        "anime",
+        "manga",
+        "pfp",
+        "avatar",
+        "badge",
+        "petpet",
+        "thumbnail",
+        "artwork",
+        "gallery",
+        "film",
+        "youtube",
+        "download",
+        "manipulation",
+        "edit image",
+    ],
+    "servermgmt": [
+        "server",
+        "role",
+        "channel",
+        "welcome",
+        "autorole",
+        "permission",
+        "backup",
+        "verification",
+        "captcha",
+        "autoroom",
+        "starboard",
+        "application",
+        "form",
+        "sticky",
+        "maintenance",
+        "member",
+        "join",
+        "leave",
+        "manage",
+        "setup",
+        "configure",
+    ],
+    "tags": [
+        "tag",
+        "custom command",
+        "customcom",
+        "embed",
+        "trigger",
+        "autorespond",
+        "responder",
+        "template",
+        "slash tag",
+    ],
+    "emoji": [
+        "emoji",
+        "emote",
+        "reaction",
+        "react role",
+        "sticker",
+    ],
+    "social": [
+        "level",
+        "xp",
+        "experience",
+        "reputation",
+        "rep",
+        "profile",
+        "marry",
+        "birthday",
+        "social",
+        "leaderboard",
+        "rank",
+    ],
+    "feeds": [
+        "feed",
+        "rss",
+        "twitch",
+        "twitter",
+        "reddit",
+        "stream",
+        "youtube",
+        "notification",
+        "alert",
+        "announce",
+        "webhook",
+        "github",
+        "uptime",
+    ],
+    "logging": [
+        "log",
+        "audit",
+        "stat",
+        "analytics",
+        "track",
+        "monitor",
+        "record",
+        "history",
+    ],
+    "core": [
+        "core",
+        "owner",
+        "cog manager",
+        "downloader",
+        "alias",
+        "help",
+        "dashboard",
+        "config",
+        "dev",
+        "debug",
+        "shell",
+        "bridge",
+        "rift",
+    ],
+}
+
+# Pre-compile keyword patterns for performance (word-boundary matching)
+_KEYWORD_PATTERNS = {}
+for _cat_key, _words in CATEGORY_KEYWORDS.items():
+    _KEYWORD_PATTERNS[_cat_key] = [
+        re.compile(r"\b" + re.escape(w) + r"\b", re.IGNORECASE) for w in _words
+    ]
+
+
+def _auto_categorize(cog_name, cog_description=""):
+    """Determine category for a cog using manual overrides + keyword matching.
+
+    Priority:
+      1. Manual override dict (exact match on lowercased cog name)
+      2. Keyword matching against cog name + description
+      3. Fallback to "other"
+    """
+    cog_lower = cog_name.lower()
+
+    # 1. Manual override
+    if cog_lower in COG_TO_CATEGORY:
+        return COG_TO_CATEGORY[cog_lower]
+
+    # 2. Keyword matching: score each category
+    text = "{} {}".format(cog_lower, (cog_description or "").lower())
+    best_cat = "other"
+    best_score = 0
+
+    for cat_key, patterns in _KEYWORD_PATTERNS.items():
+        score = sum(1 for p in patterns if p.search(text))
+        if score > best_score:
+            best_score = score
+            best_cat = cat_key
+
+    if best_score > 0:
+        logger.debug(
+            "Auto-categorized cog '{}' -> '{}' (score={})".format(
+                cog_name, best_cat, best_score
+            )
+        )
+    else:
+        logger.info(
+            "Cog '{}' unmatched by keywords, falling back to 'other'".format(cog_name)
+        )
+
+    return best_cat
 
 
 def _slugify(text):
@@ -533,8 +848,8 @@ def _build_categories(commands_data, prefix="[p]"):
         cat_buckets[cat_def["key"]] = []
 
     for cog_name, cog_data in commands_data.items():
-        cog_lower = cog_name.lower()
-        cat_key = COG_TO_CATEGORY.get(cog_lower, "other")
+        cog_desc = cog_data.get("description", "")
+        cat_key = _auto_categorize(cog_name, cog_desc)
         # Ensure category exists
         if cat_key not in cat_buckets:
             cat_key = "other"
